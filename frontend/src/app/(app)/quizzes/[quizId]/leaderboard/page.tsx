@@ -48,7 +48,9 @@ function Podium({ top }: { top: Entry[] }) {
       {PODIUM_ORDER.map((place) => {
         const e = top[place];
         if (!e) return <div key={place} />;
-        const style = PODIUM[place]!;
+        // Style by rank, not position, so students tied on a rank share the
+        // same step height and colour.
+        const style = PODIUM[Math.min(Math.max(e.rank, 1), 3) - 1]!;
         return (
           <div key={place} data-place={place} className="flex flex-col items-center">
             <div className="pd-person mb-3 flex flex-col items-center text-center">

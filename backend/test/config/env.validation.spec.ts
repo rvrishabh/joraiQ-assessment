@@ -1,4 +1,4 @@
-import { validateEnv } from './env.validation';
+import { validateEnv } from 'src/config/env.validation';
 
 const base = {
   DATABASE_URL: 'postgresql://x',

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { AuthUser } from 'types';
-import { AttemptsService } from './attempts.service';
+import { AttemptsService } from 'src/modules/attempts/attempts.service';
 
 const student: AuthUser = {
   id: 's1',

@@ -1,8 +1,8 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from 'types';
-import { Roles } from '../decorators/roles.decorator';
-import { RolesGuard } from './roles.guard';
+import { Roles } from 'src/modules/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
 
 @Roles('TEACHER')
 class TeacherOnly {

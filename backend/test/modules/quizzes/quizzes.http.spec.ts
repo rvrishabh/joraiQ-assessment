@@ -5,12 +5,12 @@ import {
 } from '@nestjs/platform-fastify';
 import { UnauthorizedException } from '@nestjs/common';
 import { configureApp } from 'src/app.setup';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { TokenVerifierService } from '../auth/services/token-verifier.service';
-import { ProfilesRepository } from '../users/repositories/profiles.repository';
-import { QuizzesController } from './quizzes.controller';
-import { QuizzesService } from './quizzes.service';
+import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
+import { TokenVerifierService } from 'src/modules/auth/services/token-verifier.service';
+import { ProfilesRepository } from 'src/modules/users/repositories/profiles.repository';
+import { QuizzesController } from 'src/modules/quizzes/quizzes.controller';
+import { QuizzesService } from 'src/modules/quizzes/quizzes.service';
 
 const profiles: Record<string, unknown> = {
   teacher1: { id: 'teacher1', email: 't@t', fullName: 'T', role: 'TEACHER' },

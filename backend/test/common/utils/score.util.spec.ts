@@ -1,4 +1,4 @@
-import { rankEntries, toAccuracy } from './score.util';
+import { rankEntries, toAccuracy } from 'src/common/utils/score.util';
 
 const at = (m: number) => new Date(2026, 0, 1, 10, m);
 

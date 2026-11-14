@@ -1,4 +1,4 @@
-import { buildCorsOptions } from './security.config';
+import { buildCorsOptions } from 'src/config/security.config';
 
 describe('buildCorsOptions', () => {
   it('allows only the configured frontend in production', () => {

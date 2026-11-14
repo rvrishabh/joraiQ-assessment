@@ -1,6 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 import { AuthUser } from 'types';
-import { LeaderboardService } from './leaderboard.service';
+import { LeaderboardService } from 'src/modules/leaderboard/leaderboard.service';
 
 const at = (m: number) => new Date(2026, 0, 1, 9, m);
 const attempt = (id: string, name: string, correct: number, m: number) => ({

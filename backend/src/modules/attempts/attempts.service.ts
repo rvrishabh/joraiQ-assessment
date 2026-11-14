@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from 'src/generated/prisma/client';
 import { toAccuracy } from 'src/common/utils/score.util';
 import { AuthUser, IAttemptResult, IAttemptSheet } from 'types';
 import { AssignmentsRepository } from '../assignments/repositories/assignments.repository';

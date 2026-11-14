@@ -48,7 +48,7 @@ npm run start:dev         # http://localhost:3000, Swagger at /api/docs
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Pooled Supabase connection (add `?pgbouncer=true`) |
-| `DIRECT_URL` | Direct connection, used by migrations |
+| `DIRECT_URL` | Direct or session-pooler connection. Read by `prisma.config.ts` for migrations |
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only. Creates users. Never put this in the frontend |
 | `SUPABASE_JWT_SECRET` | Optional. Set for projects on the legacy HS256 secret; leave empty to use the JWKS endpoint |

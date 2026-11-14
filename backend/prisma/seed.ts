@@ -1,8 +1,12 @@
 import 'dotenv/config';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient, UserRole } from '../src/generated/prisma/client';
+import { toPoolConfig } from '../src/prisma/pool-config';
 import { createClient } from '@supabase/supabase-js';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(toPoolConfig(process.env.DATABASE_URL!)),
+});
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,

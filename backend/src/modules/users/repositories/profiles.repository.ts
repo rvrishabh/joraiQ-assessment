@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { Prisma, UserRole } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 export const PROFILE_SELECT = {

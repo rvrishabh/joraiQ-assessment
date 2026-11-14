@@ -2,6 +2,7 @@
 
 import { useQuizzesQuery } from "@/api/queries/quizzes";
 import { PageHeader } from "@/components/Layout/AppShell";
+import { Highlighted, Reveal } from "@/components/Motion";
 import { EmptyState, ErrorState, PageLoader } from "@/components/States";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,17 +16,17 @@ export default function TeacherDashboard() {
   const quizzes = useQuizzesQuery();
   const newQuiz = (
     <Link href="/teacher/quizzes/new">
-      <Button>
-        <Plus className="size-4" aria-hidden /> New quiz
+      <Button variant="pencil" size="lg">
+        <Plus className="size-4" strokeWidth={3} aria-hidden /> New quiz
       </Button>
     </Link>
   );
 
   return (
-    <>
+    <Reveal deps={[quizzes.data?.length]}>
       <PageHeader
-        title={`Hello, ${user?.fullName.split(" ")[0] ?? "teacher"}`}
-        subtitle="Your quizzes and how far each class has got."
+        title={<Highlighted>Hello, {user?.fullName.split(" ")[0] ?? "teacher"}</Highlighted>}
+        subtitle="Your quizzes, and how far each class has got with them."
         actions={newQuiz}
       />
 
@@ -41,9 +42,12 @@ export default function TeacherDashboard() {
       {quizzes.data && quizzes.data.length > 0 && (
         <>
           <TeacherSummary quizzes={quizzes.data} />
+          <h2 data-reveal className="mb-4 text-xl font-bold">
+            Your quizzes
+          </h2>
           <QuizTable quizzes={quizzes.data} />
         </>
       )}
-    </>
+    </Reveal>
   );
 }

@@ -4,14 +4,16 @@ import { useAssignQuizMutation } from "@/api/mutations/assignments";
 import { useQuizAssignmentsQuery } from "@/api/queries/assignments";
 import { useQuizDetailQuery } from "@/api/queries/quizzes";
 import { useStudentsQuery } from "@/api/queries/students";
-import { PageHeader } from "@/components/Layout/AppShell";
+import { BackLink, PageHeader } from "@/components/Layout/AppShell";
+import { Reveal } from "@/components/Motion";
 import { EmptyState, ErrorState, PageLoader } from "@/components/States";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, pluralize } from "@/lib/format";
+import { formatDate, initials, pluralize } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Search } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -63,14 +65,14 @@ export default function AssignPage() {
 
   if (quiz.isError) return <ErrorState error={quiz.error} onRetry={() => quiz.refetch()} />;
 
+  const ready = students.data && assignments.data;
+
   return (
-    <>
-      <Link href="/teacher" className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden /> All quizzes
-      </Link>
+    <Reveal className="mx-auto max-w-4xl" deps={[!!ready]}>
+      <BackLink href="/teacher">All quizzes</BackLink>
       <PageHeader
-        title={quiz.data ? `Assign: ${quiz.data.title}` : "Assign quiz"}
-        subtitle="Choose the students who should take this quiz. Students who already have it are marked."
+        title={quiz.data ? quiz.data.title : "Assign quiz"}
+        subtitle="Choose who should take this quiz. Students who already have it are marked."
         actions={
           <Link href={`/teacher/quizzes/${quizId}/analytics`}>
             <Button variant="secondary">View results</Button>
@@ -89,72 +91,85 @@ export default function AssignPage() {
         />
       )}
 
-      {students.data && assignments.data && students.data.length === 0 && (
+      {ready && students.data.length === 0 && (
         <EmptyState
           title="No students have registered"
           body="Students appear here once they create a student account."
         />
       )}
 
-      {students.data && assignments.data && students.data.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-line bg-paper">
+      {ready && students.data.length > 0 && (
+        <div data-reveal className="sheet overflow-hidden rounded-2xl">
           <div className="flex flex-wrap items-center gap-3 border-b border-line p-4">
             <div className="relative min-w-52 flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft" aria-hidden />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-soft" aria-hidden />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name or email"
                 aria-label="Search students"
-                className="h-10 w-full rounded-md border border-line bg-sheet/50 pl-9 pr-3 text-sm outline-none focus:border-ink"
+                className="h-11 w-full rounded-[10px] border border-line bg-sheet/60 pl-10 pr-3 text-sm outline-none transition-[border-color,box-shadow] focus:border-ink focus:bg-paper focus:shadow-[0_0_0_4px_rgba(255,201,60,0.45)]"
               />
             </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                disabled={selectable.length === 0}
-                onChange={toggleAll}
-                className="size-4 accent-ink"
-              />
+            <button
+              type="button"
+              onClick={toggleAll}
+              disabled={selectable.length === 0}
+              className="inline-flex h-11 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold transition-colors hover:bg-ink/[0.05] disabled:opacity-40"
+            >
+              <CheckBubble checked={allSelected} />
               Select all available
-            </label>
+            </button>
           </div>
 
           {visible.length === 0 ? (
-            <p className="p-8 text-center text-sm text-ink-soft">No students match "{search}".</p>
+            <p className="p-10 text-center text-sm text-ink-soft">No students match &ldquo;{search}&rdquo;.</p>
           ) : (
-            <ul className="divide-y divide-line">
+            <ul className="grid sm:grid-cols-2">
               {visible.map((s) => {
                 const existing = statusByStudent.get(s.id);
+                const isOn = selected.has(s.id);
                 return (
-                  <li key={s.id}>
+                  <li key={s.id} className="border-b border-line sm:odd:border-r">
                     <label
-                      className={`flex items-center gap-4 px-4 py-3 ${existing ? "opacity-70" : "cursor-pointer hover:bg-sheet/60"}`}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3.5 transition-colors has-[:focus-visible]:bg-pencil-soft",
+                        existing ? "cursor-default" : "cursor-pointer hover:bg-sheet/70",
+                        isOn && "bg-pencil-soft",
+                      )}
                     >
                       <input
                         type="checkbox"
                         disabled={!!existing}
-                        checked={selected.has(s.id)}
+                        checked={isOn}
                         onChange={() => toggle(s.id)}
-                        className="size-4 accent-ink"
+                        className="sr-only"
                       />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{s.fullName}</span>
-                        <span className="block truncate text-sm text-ink-soft">{s.email}</span>
-                      </span>
                       {existing ? (
-                        <span className="flex items-center gap-3">
-                          <span className="hidden text-xs text-ink-soft sm:inline">
-                            Assigned {formatDate(existing.assignedAt)}
-                          </span>
-                          <Badge tone={existing.status === "COMPLETED" ? "done" : "pending"}>
-                            {existing.status === "COMPLETED" ? "Completed" : "Not completed"}
-                          </Badge>
+                        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sheet font-display text-sm font-bold text-ink-soft">
+                          {initials(s.fullName)}
                         </span>
                       ) : (
-                        <Badge>Not assigned</Badge>
+                        <span
+                          className={cn(
+                            "grid size-10 shrink-0 place-items-center rounded-full border-2 font-display text-sm font-bold transition-all duration-200",
+                            isOn ? "scale-105 border-ink bg-ink text-white" : "border-ink/20 text-ink",
+                          )}
+                        >
+                          {isOn ? <Check className="size-4 animate-pop" strokeWidth={3} aria-hidden /> : initials(s.fullName)}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className={cn("block truncate font-semibold", existing && "text-ink-soft")}>{s.fullName}</span>
+                        <span className="block truncate text-xs text-ink-soft">
+                          {existing ? `Assigned ${formatDate(existing.assignedAt)}` : s.email}
+                        </span>
+                      </span>
+                      {existing && (
+                        <Badge tone={existing.status === "COMPLETED" ? "done" : "pending"}>
+                          {existing.status === "COMPLETED" ? "Done" : "Pending"}
+                        </Badge>
                       )}
                     </label>
                   </li>
@@ -163,14 +178,31 @@ export default function AssignPage() {
             </ul>
           )}
 
-          <div className="flex items-center justify-between gap-3 border-t border-line bg-sheet/50 p-4">
-            <span className="text-sm text-ink-soft">{selected.size} selected</span>
-            <Button onClick={() => void submit()} disabled={selected.size === 0} loading={assign.isPending}>
-              Assign to {selected.size || ""} {selected.size === 1 ? "student" : "students"}
+          <div className="sticky bottom-0 flex items-center justify-between gap-3 bg-paper/95 p-4 backdrop-blur">
+            <span className="text-sm">
+              <span className="font-display text-base font-extrabold tabular-nums">{selected.size}</span>
+              <span className="text-ink-soft"> selected</span>
+            </span>
+            <Button onClick={() => void submit()} disabled={selected.size === 0} loading={assign.isPending} size="lg">
+              {selected.size === 0 ? "Assign" : `Assign to ${pluralize(selected.size, "student")}`}
             </Button>
           </div>
         </div>
       )}
-    </>
+    </Reveal>
+  );
+}
+
+function CheckBubble({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "grid size-5 place-items-center rounded-full border-2 transition-colors",
+        checked ? "border-ink bg-ink text-white" : "border-ink/30",
+      )}
+    >
+      {checked && <Check className="size-3" strokeWidth={3.5} />}
+    </span>
   );
 }

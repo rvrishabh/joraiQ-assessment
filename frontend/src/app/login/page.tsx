@@ -1,9 +1,8 @@
 "use client";
 
 import { useLoginMutation } from "@/api/mutations/auth";
-import { OmrSheet } from "@/components/Brand/OmrSheet";
-import { Logo } from "@/components/Brand/Logo";
 import FormInput from "@/components/Form/FormInput";
+import { AuthLayout } from "@/components/Layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { loginFormSchema, type LoginFormValues } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,66 +30,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-ink p-12 text-white lg:flex">
-        <div className="text-white">
-          <Logo light />
-        </div>
-        <div className="space-y-10">
-          <div className="max-w-md space-y-3">
-            <h1 className="text-4xl font-bold leading-[1.05] xl:text-5xl">
-              Set the quiz. Let the sheet do the marking.
-            </h1>
-            <p className="text-lg text-white/65">
-              Assign to your class, see who finished, and who is still guessing.
-            </p>
-          </div>
-          <OmrSheet />
-        </div>
-        <p className="text-sm text-white/45">JoraIQ learning platform</p>
-      </aside>
+    <AuthLayout>
+      <h2 data-reveal className="text-4xl font-extrabold">
+        Welcome back
+      </h2>
+      <p data-reveal className="mt-2 text-ink-soft">
+        Sign in with the email you registered with.
+      </p>
 
-      <section className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <Logo />
-          </div>
-          <h2 className="text-3xl font-bold">Sign in</h2>
-          <p className="mt-1.5 text-ink-soft">Use the account you registered with.</p>
-
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-4" noValidate>
-            <FormInput
-              label="Email"
-              type="email"
-              autoComplete="email"
-              error={form.formState.errors.email?.message}
-              {...form.register("email")}
-            />
-            <FormInput
-              label="Password"
-              type="password"
-              autoComplete="current-password"
-              error={form.formState.errors.password?.message}
-              {...form.register("password")}
-            />
-            {formError && (
-              <p role="alert" className="rounded-md bg-redpen-soft px-3 py-2 text-sm text-redpen">
-                {formError}
-              </p>
-            )}
-            <Button type="submit" size="lg" className="w-full" loading={login.isPending}>
-              Sign in
-            </Button>
-          </form>
-
-          <p className="mt-6 text-sm text-ink-soft">
-            New here?{" "}
-            <Link href="/register" className="font-medium text-ink underline underline-offset-4">
-              Create an account
-            </Link>
+      <form
+        data-reveal
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="sheet mt-8 space-y-4 rounded-2xl p-6 sm:p-7"
+        noValidate
+      >
+        <FormInput
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@school.edu"
+          error={form.formState.errors.email?.message}
+          {...form.register("email")}
+        />
+        <FormInput
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          error={form.formState.errors.password?.message}
+          {...form.register("password")}
+        />
+        {formError && (
+          <p role="alert" className="animate-rise rounded-lg border border-redpen/20 bg-redpen-soft px-3 py-2 text-sm text-redpen">
+            {formError}
           </p>
-        </div>
-      </section>
-    </div>
+        )}
+        <Button type="submit" size="lg" className="mt-2 w-full" loading={login.isPending}>
+          Sign in
+        </Button>
+      </form>
+
+      <p data-reveal className="mt-6 text-center text-sm text-ink-soft">
+        New here?{" "}
+        <Link href="/register" className="font-semibold text-ink underline decoration-pencil decoration-[3px] underline-offset-4 hover:decoration-ink">
+          Create an account
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

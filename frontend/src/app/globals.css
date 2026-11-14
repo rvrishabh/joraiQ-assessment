@@ -1,36 +1,165 @@
 @import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/caveat";
 @import "tailwindcss";
 
+/*
+ * Exam-desk palette: graph paper, white answer sheets, ballpoint ink,
+ * HB pencil yellow for what the student marks, red pen for what the
+ * teacher marks, green for correct.
+ */
 @theme inline {
   --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
   --font-display: "Bricolage Grotesque Variable", "Instrument Sans Variable", sans-serif;
+  --font-hand: "Caveat Variable", "Bradley Hand", cursive;
 
-  --color-sheet: #edf0f5;
+  --color-sheet: #eef1f7;
+  --color-grid: #dfe4ef;
   --color-paper: #ffffff;
-  --color-ink: #1d2433;
-  --color-ink-soft: #566074;
-  --color-line: #d8dde8;
-  --color-pencil: #f4c430;
-  --color-pencil-deep: #c9980a;
-  --color-mark: #1e8f5c;
-  --color-mark-soft: #e3f4ec;
-  --color-redpen: #d2433d;
-  --color-redpen-soft: #fbe9e8;
+  --color-ink: #19214a;
+  --color-ink-2: #2a3570;
+  --color-ink-soft: #5b6487;
+  --color-line: #d9deea;
+  --color-pencil: #ffc93c;
+  --color-pencil-soft: #fff4d1;
+  --color-pencil-deep: #b88400;
+  --color-mark: #0f8a5f;
+  --color-mark-soft: #e2f5ec;
+  --color-redpen: #e03a2f;
+  --color-redpen-soft: #fde9e7;
+  --color-margin: #f4a3a0;
+
+  --shadow-sheet: 0 1px 0 rgba(25, 33, 74, 0.04), 0 12px 32px -18px rgba(25, 33, 74, 0.28);
+  --shadow-lift: 0 2px 0 rgba(25, 33, 74, 0.05), 0 22px 44px -22px rgba(25, 33, 74, 0.4);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-grow-x: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pop: pop 0.32s cubic-bezier(0.34, 1.8, 0.64, 1) both;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  0% { transform: scale(0) rotate(-20deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--r, 0deg)); }
 }
 
 html { background: var(--color-sheet); }
 body {
   margin: 0;
+  min-height: 100vh;
   font-family: var(--font-sans);
   color: var(--color-ink);
-  background: var(--color-sheet);
+  /* Graph paper: a fine 24px grid with a stronger line every 5 squares. */
+  background-color: var(--color-sheet);
+  background-image:
+    linear-gradient(to right, rgba(25, 33, 74, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(25, 33, 74, 0.045) 1px, transparent 1px),
+    linear-gradient(to right, rgba(25, 33, 74, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(25, 33, 74, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
-h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; }
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+  font-variation-settings: "wdth" 100;
+}
 
-:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+::selection { background: var(--color-pencil); color: var(--color-ink); }
+
+:focus-visible {
+  outline: 2.5px solid var(--color-ink-2);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* An answer sheet: white paper with a soft cast shadow. */
+.sheet {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Exam paper: red margin rule down the left, like ruled school paper. */
+.ruled {
+  position: relative;
+  background: var(--color-paper);
+}
+.ruled::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 3.25rem;
+  width: 1.5px;
+  background: var(--color-margin);
+  opacity: 0.7;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .ruled::before { left: 2.5rem; }
+}
+
+/* Perforated edge between a ticket's stub and its body. */
+.perforated {
+  background-image: radial-gradient(circle, var(--color-sheet) 3.5px, transparent 4px);
+  background-size: 1px 14px;
+  background-repeat: repeat-y;
+  background-position: center;
+}
+
+/* Highlighter swipe sitting behind text. Width is animated with GSAP. */
+.highlight {
+  position: relative;
+  isolation: isolate;
+}
+.highlight-bar {
+  position: absolute;
+  left: -0.12em;
+  right: -0.12em;
+  bottom: 0.06em;
+  height: 0.42em;
+  z-index: -1;
+  background: var(--color-pencil);
+  border-radius: 3px 8px 4px 10px;
+  transform-origin: left center;
+  opacity: 0.85;
+}
+
+.hand {
+  font-family: var(--font-hand);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(25,33,74,0.06) 0%, rgba(25,33,74,0.12) 40%, rgba(25,33,74,0.06) 80%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+.floaty { animation: float 6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

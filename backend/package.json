@@ -76,5 +76,8 @@
       "^types/(.*)$": "<rootDir>/types/$1"
     },
     "testEnvironment": "node"
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }

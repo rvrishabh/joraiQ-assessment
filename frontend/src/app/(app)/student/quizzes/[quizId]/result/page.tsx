@@ -1,16 +1,25 @@
 "use client";
 
 import { useQuizResultQuery } from "@/api/queries/attempts";
+import { BackLink } from "@/components/Layout/AppShell";
+import { CountUp, PenCross, PenTick, Reveal } from "@/components/Motion";
 import { ErrorState, PageLoader } from "@/components/States";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/axios";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Check, Trophy, X } from "lucide-react";
-import { ScoreRing } from "../../../_components/ScoreRing";
+import { Check, Trophy } from "lucide-react";
+import { GradedScore } from "../../../_components/GradedScore";
+
+function verdict(accuracy: number) {
+  if (accuracy === 100) return "Full marks.";
+  if (accuracy >= 80) return "Excellent work.";
+  if (accuracy >= 60) return "Good effort.";
+  if (accuracy >= 40) return "Getting there.";
+  return "Worth another look.";
+}
 
 export default function ResultPage() {
   const { quizId } = useParams<{ quizId: string }>();
@@ -20,10 +29,10 @@ export default function ResultPage() {
   if (result.error instanceof ApiError && result.error.status === 404) {
     return (
       <div className="mx-auto max-w-md space-y-4 py-16 text-center">
-        <h1 className="text-3xl font-bold">No result yet</h1>
+        <h1 className="text-4xl font-extrabold">No result yet</h1>
         <p className="text-ink-soft">You have not submitted this quiz.</p>
         <Link href={`/student/quizzes/${quizId}/attempt`}>
-          <Button>Start quiz</Button>
+          <Button variant="pencil">Start quiz</Button>
         </Link>
       </div>
     );
@@ -33,60 +42,59 @@ export default function ResultPage() {
   }
 
   const r = result.data;
-  const stats = [
-    { label: "Total questions", value: r.totalQuestions },
-    { label: "Correct", value: r.correctCount },
-    { label: "Incorrect", value: r.incorrectCount },
-  ];
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Link href="/student" className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden /> Back to my quizzes
-      </Link>
+    <Reveal className="mx-auto max-w-3xl">
+      <BackLink href="/student">Back to my quizzes</BackLink>
 
-      <section className="flex flex-col items-center gap-6 rounded-2xl border border-line bg-paper p-8 sm:flex-row sm:gap-10">
-        <ScoreRing accuracy={r.accuracy} />
-        <div className="flex-1 text-center sm:text-left">
-          <Badge tone="done">Completed</Badge>
-          <h1 className="mt-2 text-3xl font-bold">
-            You got {r.correctCount} of {r.totalQuestions} right
-          </h1>
-          <p className="mt-1 text-sm text-ink-soft">Submitted {formatDate(r.submittedAt)}</p>
-          <dl className="mt-5 grid grid-cols-3 gap-3 text-left">
-            {stats.map((s) => (
-              <div key={s.label} className="rounded-lg bg-sheet px-3 py-2.5">
-                <dd className="font-display text-2xl font-bold tabular-nums">{s.value}</dd>
-                <dt className="text-xs text-ink-soft">{s.label}</dt>
-              </div>
-            ))}
-          </dl>
-          <Link href={`/quizzes/${quizId}/leaderboard`} className="mt-5 inline-block">
-            <Button>
-              <Trophy className="size-4" aria-hidden /> See the leaderboard
-            </Button>
-          </Link>
+      <section data-reveal className="sheet relative overflow-hidden rounded-3xl">
+        <div className="flex flex-col items-center gap-6 p-7 sm:flex-row sm:gap-8 sm:p-9">
+          <GradedScore correct={r.correctCount} total={r.totalQuestions} accuracy={r.accuracy} />
+          <div className="flex-1 text-center sm:text-left">
+            <h1 className="text-4xl font-extrabold leading-[1.05] sm:text-5xl">{verdict(r.accuracy)}</h1>
+            <p className="mt-2 text-ink-soft">
+              You got {r.correctCount} of {r.totalQuestions} right. Submitted {formatDate(r.submittedAt)}.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+              <Link href={`/quizzes/${quizId}/leaderboard`}>
+                <Button variant="pencil" size="lg">
+                  <Trophy className="size-4" aria-hidden /> See the leaderboard
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
+        <dl className="grid grid-cols-3 border-t border-line bg-sheet/60">
+          <Figure label="Accuracy" value={r.accuracy} suffix="%" />
+          <Figure label="Correct" value={r.correctCount} tone="text-mark" />
+          <Figure label="Incorrect" value={r.incorrectCount} tone="text-redpen" />
+        </dl>
       </section>
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold">Your answers</h2>
-      <ol className="space-y-3">
+      <h2 data-reveal className="mb-4 mt-12 text-2xl font-extrabold">
+        Your answers
+      </h2>
+      <ol className="space-y-4">
         {r.review.map((q, i) => (
-          <li key={q.questionId} className="rounded-xl border border-line bg-paper p-5">
-            <p className="flex items-start gap-3 font-medium">
-              <span
-                className={cn(
-                  "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-white",
-                  q.isCorrect ? "bg-mark" : "bg-redpen",
-                )}
-              >
-                {q.isCorrect ? <Check className="size-3.5" aria-label="Correct" /> : <X className="size-3.5" aria-label="Incorrect" />}
-              </span>
-              <span>
-                {i + 1}. {q.prompt}
-              </span>
+          <li key={q.questionId} data-reveal className="ruled sheet rounded-2xl py-5 pl-16 pr-5 sm:pl-[4.75rem] sm:pr-7">
+            <span
+              className={cn(
+                "absolute left-0 top-4 grid w-[3.25rem] place-items-center max-sm:w-10",
+                q.isCorrect ? "text-mark" : "text-redpen",
+              )}
+            >
+              {q.isCorrect ? (
+                <PenTick className="size-8" delay={0.4 + i * 0.12} />
+              ) : (
+                <PenCross className="size-7" delay={0.4 + i * 0.12} />
+              )}
+              <span className="sr-only">{q.isCorrect ? "Correct" : "Incorrect"}</span>
+            </span>
+            <p className="font-display text-lg font-bold leading-snug">
+              <span className="mr-1.5 text-ink/35 tabular-nums">{i + 1}.</span>
+              {q.prompt}
             </p>
-            <ul className="mt-3 space-y-1.5 pl-9 text-sm">
+            <ul className="mt-3.5 grid gap-2 sm:grid-cols-2">
               {q.options.map((o) => {
                 const isCorrect = o.id === q.correctOptionId;
                 const isPicked = o.id === q.selectedOptionId;
@@ -94,14 +102,22 @@ export default function ResultPage() {
                   <li
                     key={o.id}
                     className={cn(
-                      "rounded-md px-3 py-1.5",
-                      isCorrect && "bg-mark-soft text-mark",
-                      isPicked && !isCorrect && "bg-redpen-soft text-redpen",
+                      "flex items-center gap-2.5 rounded-xl border-[1.5px] px-3 py-2 text-sm",
+                      isCorrect && "border-mark bg-mark-soft font-semibold text-[#0a5c40]",
+                      isPicked && !isCorrect && "border-redpen/60 bg-redpen-soft text-redpen",
+                      !isCorrect && !isPicked && "border-line text-ink-soft",
                     )}
                   >
-                    {o.text}
-                    {isCorrect && " - correct answer"}
-                    {isPicked && !isCorrect && " - your answer"}
+                    <span className={cn("min-w-0 flex-1", isPicked && !isCorrect && "line-through decoration-2")}>
+                      {o.text}
+                    </span>
+                    {isCorrect && (
+                      <span className="flex shrink-0 items-center gap-1 text-xs">
+                        <Check className="size-3.5" aria-hidden />
+                        {isPicked ? "Your answer" : "Correct answer"}
+                      </span>
+                    )}
+                    {isPicked && !isCorrect && <span className="shrink-0 text-xs font-semibold">Your answer</span>}
                   </li>
                 );
               })}
@@ -109,6 +125,17 @@ export default function ResultPage() {
           </li>
         ))}
       </ol>
+    </Reveal>
+  );
+}
+
+function Figure({ label, value, suffix, tone }: { label: string; value: number; suffix?: string; tone?: string }) {
+  return (
+    <div className="px-5 py-4 text-center sm:px-7 sm:text-left [&:not(:first-child)]:border-l [&:not(:first-child)]:border-line">
+      <dd className={cn("font-display text-3xl font-extrabold", tone)}>
+        <CountUp value={Math.round(value)} suffix={suffix} />
+      </dd>
+      <dt className="text-xs font-medium text-ink-soft">{label}</dt>
     </div>
   );
 }

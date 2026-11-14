@@ -10,6 +10,9 @@ interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
 }
 
+export const fieldClass =
+  "w-full rounded-[10px] border bg-paper text-base outline-none transition-[border-color,box-shadow] placeholder:text-ink-soft/55 focus:border-ink focus:shadow-[0_0_0_4px_rgba(255,201,60,0.45)]";
+
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   ({ label, error, hint, className, type, ...props }, ref) => {
     const id = useId();
@@ -17,7 +20,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     const isPassword = type === "password";
     return (
       <div className="space-y-1.5">
-        <label htmlFor={id} className="text-sm font-medium">
+        <label htmlFor={id} className="text-sm font-semibold">
           {label}
         </label>
         <div className="relative">
@@ -28,9 +31,10 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             aria-invalid={!!error}
             aria-describedby={error ? `${id}-err` : undefined}
             className={cn(
-              "h-11 w-full rounded-md border bg-paper px-3 text-base outline-none transition-colors placeholder:text-ink-soft/60 focus:border-ink",
+              fieldClass,
+              "h-11 px-3.5",
               isPassword && "pr-11",
-              error ? "border-redpen" : "border-line",
+              error ? "border-redpen focus:shadow-[0_0_0_4px_rgba(224,58,47,0.15)]" : "border-line",
               className,
             )}
             {...props}
@@ -41,7 +45,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
               onClick={() => setVisible((v) => !v)}
               aria-label={visible ? "Hide password" : "Show password"}
               aria-pressed={visible}
-              className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-md text-ink-soft transition-colors hover:text-ink"
+              className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-[10px] text-ink-soft transition-colors hover:text-ink"
             >
               {visible ? <EyeOff className="size-4.5" aria-hidden /> : <Eye className="size-4.5" aria-hidden />}
             </button>
@@ -49,7 +53,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
         </div>
         {hint && !error && <p className="text-xs text-ink-soft">{hint}</p>}
         {error && (
-          <p id={`${id}-err`} className="text-xs text-redpen">
+          <p id={`${id}-err`} className="animate-rise text-xs font-medium text-redpen">
             {error}
           </p>
         )}

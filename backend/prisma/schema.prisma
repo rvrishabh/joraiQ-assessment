@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  TEACHER
+  STUDENT
+}
+
+/// One row per Supabase auth user. `id` equals auth.users.id.
+model Profile {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  fullName  String   @map("full_name")
+  role      UserRole
+  createdAt DateTime @default(now()) @map("created_at")
+
+  quizzes     Quiz[]
+  assignments QuizAssignment[]
+
+  @@index([role])
+  @@map("profiles")
+}
+
+model Quiz {
+  id          String   @id @default(uuid()) @db.Uuid
+  teacherId   String   @map("teacher_id") @db.Uuid
+  title       String
+  description String   @default("")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  teacher     Profile          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  assignments QuizAssignment[]
+
+  @@index([teacherId, createdAt])
+  @@map("quizzes")
+}
+
+model Question {
+  id       String @id @default(uuid()) @db.Uuid
+  quizId   String @map("quiz_id") @db.Uuid
+  prompt   String
+  position Int
+
+  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options AnswerOption[]
+  answers AttemptAnswer[]
+
+  @@unique([quizId, position])
+  @@map("questions")
+}
+
+model AnswerOption {
+  id         String  @id @default(uuid()) @db.Uuid
+  questionId String  @map("question_id") @db.Uuid
+  text       String
+  position   Int
+  isCorrect  Boolean @default(false) @map("is_correct")
+
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
+
+  @@unique([questionId, position])
+  @@map("answer_options")
+}
+
+model QuizAssignment {
+  id         String   @id @default(uuid()) @db.Uuid
+  quizId     String   @map("quiz_id") @db.Uuid
+  studentId  String   @map("student_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student Profile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attempt Attempt?
+
+  @@unique([quizId, studentId])
+  @@index([studentId])
+  @@map("quiz_assignments")
+}
+
+/// Exists only for completed submissions. The unique assignmentId is what
+/// stops a second submission, even under concurrent requests.
+model Attempt {
+  id             String   @id @default(uuid()) @db.Uuid
+  assignmentId   String   @unique @map("assignment_id") @db.Uuid
+  totalQuestions Int      @map("total_questions")
+  correctCount   Int      @map("correct_count")
+  submittedAt    DateTime @default(now()) @map("submitted_at")
+
+  assignment QuizAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  answers    AttemptAnswer[]
+
+  @@map("attempts")
+}
+
+model AttemptAnswer {
+  id               String  @id @default(uuid()) @db.Uuid
+  attemptId        String  @map("attempt_id") @db.Uuid
+  questionId       String  @map("question_id") @db.Uuid
+  selectedOptionId String  @map("selected_option_id") @db.Uuid
+  isCorrect        Boolean @map("is_correct")
+
+  attempt        Attempt      @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption AnswerOption @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@map("attempt_answers")
+}

@@ -1,0 +1,36 @@
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/instrument-sans";
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Instrument Sans Variable", sans-serif;
+
+  --color-sheet: #edf0f5;
+  --color-paper: #ffffff;
+  --color-ink: #1d2433;
+  --color-ink-soft: #566074;
+  --color-line: #d8dde8;
+  --color-pencil: #f4c430;
+  --color-pencil-deep: #c9980a;
+  --color-mark: #1e8f5c;
+  --color-mark-soft: #e3f4ec;
+  --color-redpen: #d2433d;
+  --color-redpen-soft: #fbe9e8;
+}
+
+html { background: var(--color-sheet); }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-sheet);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; }
+
+:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

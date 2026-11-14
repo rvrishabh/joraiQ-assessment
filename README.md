@@ -160,7 +160,7 @@ Every success is `{ success: true, data }`; every failure is `{ success: false, 
 ## Design decisions and trade-offs
 
 **Auth and access**
-- Supabase issues sessions; NestJS decides access. The browser signs in with the anon key and sends the access token as a bearer token. `JwtAuthGuard` verifies it locally with `jose` (HS256 secret if set, otherwise the project JWKS), so there is no call to Supabase per request.
+- Supabase issues sessions; NestJS decides access. The browser signs in with the anon key and sends the access token as a bearer token. `JwtAuthGuard` verifies it locally with `jose` (HS256 secret if set, otherwise the project JWKS), so there is no call to Supabase Auth per request (the profile is read from Postgres and cached for 30 seconds).
 - The role comes from the `profiles` table, never from the token. Users can edit their own `user_metadata`, so trusting it would let anyone become a teacher.
 - Registration goes through `POST /auth/register`. The backend creates the auth user with the service-role key (which never leaves the server), writes the profile, and deletes the auth user if the profile insert fails, so the two never drift apart. Accounts are pre-confirmed so the demo needs no email setup.
 - Teacher sign-up is open by default so a reviewer can try both roles. Set `TEACHER_INVITE_CODE` to require a code.
@@ -188,7 +188,7 @@ Every success is `{ success: true, data }`; every failure is `{ success: false, 
 
 **Frontend**
 - Next.js is a client-rendered shell: the session lives in supabase-js in the browser and all business logic is in NestJS, so pages are client components and route guards run in layouts once the profile has loaded.
-- If `/users/me` returns 401 the session is signed out; if the API is unreachable (for example a cold start) the session is kept and the load retries, so an outage does not log everyone out.
+- If `/users/me` returns 401 the session is signed out; if the API is unreachable (for example a cold start) the session is kept and the profile loads again on the next page reload or sign-in, so an outage does not log everyone out.
 - A 409 on submit (already submitted from another tab) sends the student to their result.
 - Every data screen has loading, empty and error states, with the server's message and a retry.
 

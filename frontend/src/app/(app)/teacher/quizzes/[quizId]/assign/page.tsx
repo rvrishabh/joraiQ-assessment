@@ -9,6 +9,7 @@ import { Reveal } from "@/components/Motion";
 import { EmptyState, ErrorState, PageLoader } from "@/components/States";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatDate, initials, pluralize } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -20,24 +21,28 @@ import { toast } from "sonner";
 export default function AssignPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const quiz = useQuizDetailQuery(quizId);
-  const students = useStudentsQuery();
-  const assignments = useQuizAssignmentsQuery(quizId);
-  const assign = useAssignQuizMutation(quizId);
-
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search.trim());
+
+  const students = useStudentsQuery(debouncedSearch);
+  const assignments = useQuizAssignmentsQuery(quizId);
+  const assign = useAssignQuizMutation(quizId);
 
   const statusByStudent = useMemo(
     () => new Map((assignments.data ?? []).map((a) => [a.studentId, a])),
     [assignments.data],
   );
 
+  // The server filters by the debounced term; filtering here as well keeps
+  // the list responsive while that request is in flight.
+  const loaded = useMemo(() => students.data?.pages.flat() ?? [], [students.data]);
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (students.data ?? []).filter(
+    return loaded.filter(
       (s) => !q || s.fullName.toLowerCase().includes(q) || s.email.toLowerCase().includes(q),
     );
-  }, [students.data, search]);
+  }, [loaded, search]);
 
   const selectable = visible.filter((s) => !statusByStudent.has(s.id));
   const allSelected = selectable.length > 0 && selectable.every((s) => selected.has(s.id));
@@ -58,14 +63,20 @@ export default function AssignPage() {
     });
 
   const submit = async () => {
-    const result = await assign.mutateAsync([...selected]);
-    setSelected(new Set());
-    toast.success(`Assigned to ${pluralize(result.assigned, "student")}`);
+    try {
+      const result = await assign.mutateAsync([...selected]);
+      setSelected(new Set());
+      toast.success(`Assigned to ${pluralize(result.assigned, "student")}`);
+    } catch {
+      // The mutation's onError already shows a toast.
+    }
   };
 
   if (quiz.isError) return <ErrorState error={quiz.error} onRetry={() => quiz.refetch()} />;
 
   const ready = students.data && assignments.data;
+  // An empty result while searching means "no match", not "no students".
+  const noStudentsAtAll = !!ready && loaded.length === 0 && !debouncedSearch;
 
   return (
     <Reveal className="mx-auto max-w-4xl" deps={[!!ready]}>
@@ -91,14 +102,14 @@ export default function AssignPage() {
         />
       )}
 
-      {ready && students.data.length === 0 && (
+      {noStudentsAtAll && (
         <EmptyState
           title="No students have registered"
           body="Students appear here once they create a student account."
         />
       )}
 
-      {ready && students.data.length > 0 && (
+      {ready && !noStudentsAtAll && (
         <div data-reveal className="sheet overflow-hidden rounded-2xl">
           <div className="flex flex-wrap items-center gap-3 border-b border-line p-4">
             <div className="relative min-w-52 flex-1">
@@ -119,7 +130,7 @@ export default function AssignPage() {
               className="inline-flex h-11 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold transition-colors hover:bg-ink/[0.05] disabled:opacity-40"
             >
               <CheckBubble checked={allSelected} />
-              Select all available
+              Select all shown
             </button>
           </div>
 
@@ -176,6 +187,21 @@ export default function AssignPage() {
                 );
               })}
             </ul>
+          )}
+
+          {students.hasNextPage && (
+            <div className="flex flex-col items-center gap-1 border-b border-line p-4">
+              <Button
+                variant="secondary"
+                onClick={() => void students.fetchNextPage()}
+                loading={students.isFetchingNextPage}
+              >
+                Load more students
+              </Button>
+              <span className="text-xs text-ink-soft">
+                Showing {loaded.length}. Selections are kept as you load more or search.
+              </span>
+            </div>
           )}
 
           <div className="sticky bottom-0 flex items-center justify-between gap-3 bg-paper/95 p-4 backdrop-blur">

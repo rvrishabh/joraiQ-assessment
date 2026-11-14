@@ -39,9 +39,13 @@ export default function NewQuizPage() {
   };
 
   const onSubmit = async (values: QuizFormValues) => {
-    const quiz = await createQuiz.mutateAsync(values);
-    toast.success("Quiz saved. Pick who should take it.");
-    router.push(`/teacher/quizzes/${quiz.id}/assign`);
+    try {
+      const quiz = await createQuiz.mutateAsync(values);
+      toast.success("Quiz saved. Pick who should take it.");
+      router.push(`/teacher/quizzes/${quiz.id}/assign`);
+    } catch {
+      // The mutation's onError already shows a toast; keep the form as is.
+    }
   };
 
   return (

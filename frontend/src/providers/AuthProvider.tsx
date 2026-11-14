@@ -2,11 +2,13 @@
 
 import { fetchMe } from "@/api/queries/me";
 import { AuthContext } from "@/context/auth-context";
+import { ApiError } from "@/lib/axios";
 import { supabase } from "@/lib/supabase";
 import { authAtom } from "@/stores/auth.atom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 /**
  * Supabase owns the session; the backend owns the profile and role. We only
@@ -27,9 +29,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const user = await fetchMe();
         setState({ status: "authenticated", user });
-      } catch {
-        // A valid Supabase session without a profile row cannot use the app.
-        await supabase.auth.signOut();
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          // A valid Supabase session without a profile row cannot use the app.
+          await supabase.auth.signOut();
+        } else {
+          // Server down or unreachable: keep the session so the user is
+          // signed back in once it answers. Clearing the de-dupe key lets the
+          // next SIGNED_IN (tab focus, sign-in) retry the profile load.
+          loadingFor.current = null;
+          toast.error(err instanceof ApiError ? err.message : "Could not load your profile");
+        }
         setState({ status: "anonymous", user: null });
       }
     },

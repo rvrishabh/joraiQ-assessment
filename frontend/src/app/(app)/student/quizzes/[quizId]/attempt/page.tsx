@@ -61,12 +61,19 @@ export default function AttemptPage() {
   const pct = total ? (answered / total) * 100 : 0;
 
   const onSubmit = async (values: AttemptForm) => {
-    await submit.mutateAsync({
-      answers: quiz.questions.map((q) => ({
-        questionId: q.id,
-        optionId: values.answers[q.id]!,
-      })),
-    });
+    try {
+      await submit.mutateAsync({
+        answers: quiz.questions.map((q) => ({
+          questionId: q.id,
+          optionId: values.answers[q.id]!,
+        })),
+      });
+    } catch (err) {
+      // Submitted already (another tab, or a double click that lost the
+      // race): the stored result is the right place to be. Any other error
+      // keeps the answers on screen; the mutation has shown a toast.
+      if (!(err instanceof ApiError && err.status === 409)) return;
+    }
     router.replace(`/student/quizzes/${quizId}/result`);
   };
 

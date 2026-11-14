@@ -115,7 +115,7 @@ The assessment's five required cases and where they live:
 
 ## API
 
-All under `/api/v1`, bearer token required except register and health. List endpoints take `page` and `limit` (max 100). Full flows in [`FLOWS.md`](FLOWS.md); interactive docs at `/api/docs` in development.
+All under `/api/v1`, bearer token required except register and health. `GET /quizzes` and `GET /users/students` take `page` and `limit` (max 100). The per-quiz and per-student assignment lists are small and returned whole. Full flows in [`FLOWS.md`](FLOWS.md); interactive docs at `/api/docs` in development.
 
 | Method | Path | Role | Purpose |
 | --- | --- | --- | --- |

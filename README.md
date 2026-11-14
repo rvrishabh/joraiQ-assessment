@@ -9,10 +9,10 @@ Teachers create multiple-choice quizzes and assign them to students. Students at
 
 | | URL |
 | --- | --- |
-| App (Vercel) | `https://jorai-q-assessment.vercel.app/login` |
-| API (Render) | `https://joraiq-assessment.onrender.com/api/v1` |
+| App (Vercel) | `[https://<your-app>.vercel.app](https://jorai-q-assessment.vercel.app/login)` |
+| API (Render) | `[https://joraiq-assessment.onrender.com/api/v1](https://joraiq-assessment.onrender.com/api/v1)` |
 | Health check | [`https://joraiq-assessment.onrender.com/api/v1/health`](https://joraiq-assessment.onrender.com/api/v1/health) |
-| Demo video | `https://drive.google.com/file/d/1cZAEp_EftMH3bDvi5t6xuq3FmJgSWSIT/view?usp=drive_link` |
+| Demo video | `[https://drive.google.com/file/d/1cZAEp_EftMH3bDvi5t6xuq3FmJgSWSIT/view?usp=drive_link](https://drive.google.com/file/d/1cZAEp_EftMH3bDvi5t6xuq3FmJgSWSIT/view?usp=drive_link)` |
 
 Sign in with the [demo accounts](#demo-accounts) or register a new one. The API runs on Render's free tier and sleeps when idle, so the first request after a pause can take up to a minute; opening the health check first wakes it.
 
